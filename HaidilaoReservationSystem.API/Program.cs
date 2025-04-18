@@ -1,5 +1,7 @@
 ﻿using HaidilaoReservationSystem.API.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using HaidilaoReservationSystem.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +9,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<QueueWebSocketManager>();
+
+
+// Add JSON options to use camel case for property names
+builder.Services.AddControllers()
+    .AddJsonOptions(options => {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
 
 // Register the DbContext with MariaDB
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -35,12 +45,36 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Enable CORS
+app.UseCors("AllowAll");
+
+// Add WebSocket middleware
+app.UseWebSockets();
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/ws/queue")
+    {
+        if (context.WebSockets.IsWebSocketRequest)
+        {
+            var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+            var queueManager = context.RequestServices.GetRequiredService<QueueWebSocketManager>();
+            await queueManager.HandleConnection(webSocket);
+        }
+        else
+        {
+            context.Response.StatusCode = 400;
+        }
+    }
+    else
+    {
+        await next();
+    }
+});
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
-// Enable CORS
-app.UseCors("AllowAll");
 
 app.MapControllers();
 

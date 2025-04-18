@@ -1,0 +1,327 @@
+﻿:root {
+    --haidilao-red: #e30613;
+    --haidilao-light-red: #ff4d4d;
+    --haidilao-cream: #fff9f0;
+    --haidilao-dark: #222;
+    --haidilao-gold: #d4af37;
+    --haidilao-light-gray: #f5f5f5;
+    --haidilao-border: #e0e0e0;
+    --haidilao-success: #28a745;
+    --haidilao-warning: #ffc107;
+}
+
+.check-queue-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    animation: fadeIn 0.6s ease-out;
+}
+
+.logo-header-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.checkQueue-logo {
+    width: 150px;
+    height: 150px;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.check-queue-header {
+    text-align: center;
+    color: var(--haidilao-dark);
+}
+
+    .check-queue-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        margin-top: 0;
+        color: var(--haidilao-red);
+        position: relative;
+        display: inline-block;
+    }
+
+        .check-queue-header h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 3px;
+            background: var(--haidilao-red);
+            border-radius: 3px;
+        }
+
+    .check-queue-header p {
+        color: #666;
+        font-size: 1.1rem;
+        margin-top: 1rem;
+    }
+
+.check-queue-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+}
+
+.queue-status-container {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.status-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    padding: 2rem;
+    border: 1px solid var(--haidilao-border);
+}
+
+.status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--haidilao-border);
+    padding-bottom: 1rem;
+}
+
+    .status-header h2 {
+        margin: 0;
+        color: var(--haidilao-dark);
+        font-size: 1.5rem;
+    }
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.connected-dot {
+    width: 10px;
+    height: 10px;
+    background-color: var(--haidilao-success);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.disconnected-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #ccc;
+    border-radius: 50%;
+}
+
+.status-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+}
+
+.detail-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: var(--haidilao-dark);
+    font-weight: 600;
+}
+
+.queue-position {
+    text-align: center;
+    margin: 2rem 0;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--haidilao-border);
+    border-bottom: 1px solid var(--haidilao-border);
+}
+
+.position-number {
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--haidilao-red);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.position-label {
+    font-size: 1.2rem;
+    color: var(--haidilao-dark);
+    font-weight: 500;
+}
+
+.queue-stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 2rem 0;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--haidilao-red);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.status-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--haidilao-border);
+}
+
+    .status-footer p {
+        color: #666;
+        margin-bottom: 1.5rem;
+    }
+
+.btn-back {
+    background: white;
+    color: var(--haidilao-red);
+    border: 2px solid var(--haidilao-red);
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 300px;
+}
+
+    .btn-back:hover {
+        background: var(--haidilao-red);
+        color: white;
+    }
+
+.btn-leave {
+    background: var(--haidilao-red);
+    color: white;
+    border: 2px solid var(--haidilao-red);
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 300px;
+    margin-top: 1rem;
+}
+
+    .btn-leave:hover {
+        background: #ffdede;
+        color: var(--haidilao-red);
+    }
+
+    .btn-leave:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+.form-control-contact {
+    width: 96%;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--haidilao-border);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: var(--haidilao-light-gray);
+    color: var(--haidilao-dark);
+}
+
+    .form-control-contact:focus {
+        border-color: var(--haidilao-red);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(227, 6, 19, 0.1);
+        background-color: white;
+    }
+
+/* In your CSS */
+.MuiSnackbar-root {
+    z-index: 1400;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .check-queue-container {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+
+    .check-queue-header h1 {
+        font-size: 2rem;
+    }
+
+    .status-details {
+        grid-template-columns: 1fr;
+    }
+
+    .queue-stats {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+}

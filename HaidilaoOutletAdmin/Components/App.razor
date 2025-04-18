@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
+    
+    <!-- MudBlazor Requirements -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- App CSS -->
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="HaidilaoOutletAdmin.styles.css" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    
+    <!-- Haidilao Custom Theme Variables -->
+    <style>
+        :root {
+            --haidilao-red: #e30613;
+            --haidilao-light-red: #ff4d4d;
+            --haidilao-cream: #fff9f0;
+            --haidilao-dark: #222;
+            --haidilao-gold: #d4af37;
+            --haidilao-light-gray: #f5f5f5;
+            --haidilao-border: #e0e0e0;
+            --haidilao-success: #28a745;
+            --haidilao-warning: #ffc107;
+        }
+
+        .mud-primary {
+            color: var(--haidilao-cream) !important;
+            background-color: var(--haidilao-red) !important;
+        }
+
+        .mud-primary-text {
+            color: var(--haidilao-red) !important;
+        }
+
+        .mud-button-filled.mud-primary {
+            background-color: var(--haidilao-red) !important;
+        }
+
+        .mud-button-filled.mud-primary:hover {
+            background-color: var(--haidilao-light-red) !important;
+        }
+    </style>
+    
+    <HeadOutlet />
+</head>
+
+<body>
+    <Routes />
+    <script src="_framework/blazor.server.js"></script>
+    
+    <!-- MudBlazor JS (needed for some components) -->
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,192 @@
+﻿/* HomePage.css */
+:root {
+    --haidilao-red: #e30613;
+    --haidilao-light-red: #ff4d4d;
+    --haidilao-cream: #fff9f0;
+    --haidilao-dark: #222;
+    --haidilao-gold: #d4af37;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+.homepage-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(rgba(255, 249, 240, 0.85), rgba(255, 249, 240, 0.85)), var(--background-img) center/cover;
+    padding: 2rem;
+    text-align: center;
+}
+
+.logo-title-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.homepage-logo {
+    width: 150px;
+    height: 150px;
+    margin-bottom: 1.5rem;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    animation: float 4s ease-in-out infinite;
+}
+
+.homepage-title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    margin: 0;
+    text-align: center;
+    color: var(--haidilao-dark);
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+    position: relative;
+    line-height: 1.2;
+}
+
+    .homepage-title::after {
+        content: '';
+        display: block;
+        width: 80px;
+        height: 3px;
+        background: var(--haidilao-red);
+        margin: 1.5rem auto 0;
+        border-radius: 2px;
+    }
+
+.homepage-buttons {
+    display: flex;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 1rem 2.5rem;
+    font-weight: 600;
+    border-radius: 50px;
+    border: none;
+    cursor: pointer;
+    color: white;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transform-origin: center;
+    transition: transform 0.15s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+    .btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: 0.5s;
+    }
+
+    .btn:hover::before {
+        left: 100%;
+    }
+
+    .btn:active {
+        transform: scale(0.95) !important; /* Ensure this takes precedence */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2), inset 0 2px 3px rgba(0, 0, 0, 0.2);
+        transition: transform 0.15s ease, box-shadow 0.3s ease; /* Ensure transition is defined */
+    }
+
+.btn-reserve {
+    background: var(--haidilao-red);
+    background: linear-gradient(135deg, var(--haidilao-red) 0%, var(--haidilao-light-red) 100%);
+}
+
+    .btn-reserve:hover {
+        background: linear-gradient(135deg, var(--haidilao-light-red) 0%, var(--haidilao-red) 100%);
+        box-shadow: 0 6px 20px rgba(227, 6, 19, 0.3);
+        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(227, 6, 19, 0.4);
+    }
+
+.btn-queue {
+    background: var(--haidilao-dark);
+    background: linear-gradient(135deg, #333 0%, #555 100%);
+}
+
+    .btn-queue:hover {
+        background: linear-gradient(135deg, #444 0%, #222 100%);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+.btn-check-queue {
+    background: var(--haidilao-gold);
+    background: linear-gradient(135deg, var(--haidilao-gold) 0%, #f5d06f 100%);
+}
+
+    .btn-check-queue:hover {
+        background: linear-gradient(135deg, #f5d06f 0%, var(--haidilao-gold) 100%);
+        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+    }
+
+/* Tablet and Mobile Responsive */
+@media (max-width: 768px) {
+    .homepage-logo {
+        width: 100px;
+        height: 100px;
+    }
+
+    .homepage-title {
+        font-size: 2rem;
+    }
+
+    .homepage-buttons {
+        flex-direction: column;
+        gap: 1.5rem;
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 1rem;
+    }
+        .btn:active {
+            transform: scale(0.93);
+        }
+
+        .btn:hover {
+            transform: none; /* Disable hover transform on mobile */
+        }
+}

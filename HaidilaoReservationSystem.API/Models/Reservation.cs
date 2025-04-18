@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace HaidilaoReservationSystem.API.Models
 {
@@ -9,8 +11,6 @@ namespace HaidilaoReservationSystem.API.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ReservationId { get; set; }
 
-        [Required]
-        [ForeignKey("Outlet")]
         public int OutletId { get; set; }
 
         [StringLength(50)]
@@ -22,6 +22,8 @@ namespace HaidilaoReservationSystem.API.Models
         public int? NumberOfGuest { get; set; }
 
         [Required]
+        public DateTime ReservationDateTime { get; set; }
+
         [StringLength(20)]
         [Column(TypeName = "varchar(20)")]
         [RegularExpression("Pending|Confirmed|Cancelled|Completed", ErrorMessage = "Invalid status")]
@@ -29,13 +31,14 @@ namespace HaidilaoReservationSystem.API.Models
 
         public string? SpecialRequest { get; set; }
 
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime CreatedAt { get; set; }
 
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime UpdatedAt { get; set; }
 
-        // Navigation property
-        public Outlet Outlet { get; set; }
+        [ValidateNever]
+        [JsonIgnore]
+        public Outlet? Outlet { get; set; } // Make nullable
     }
 }

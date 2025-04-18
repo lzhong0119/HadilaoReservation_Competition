@@ -1,0 +1,200 @@
+﻿@page "/"
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@using MudBlazor
+@inject ILogger<Index> Logger
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudMainContent>
+    <MudContainer Class="home-container">
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudGrid>
+                <MudItem xs="12" md="8">
+                    <MudText Typo="Typo.h4" Color="Color.Primary">Pending Reservations</MudText>
+                    <MudText Typo="Typo.subtitle1" Color="Color.Secondary">Outlet #1 - Haidilao Sunway Pyramid</MudText>
+                </MudItem>
+                <MudItem xs="12" md="4" Class="d-flex align-center justify-end">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Refresh"
+                               OnClick="() => LoadReservations()">
+                        Refresh
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <MudPaper Class="pa-4" Elevation="1">
+            @if (reservations == null)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+            }
+            else if (!reservations.Any())
+            {
+                <MudAlert Severity="Severity.Info" Class="my-4">
+                    No pending reservations found
+                </MudAlert>
+            }
+            else
+            {
+                <MudTable Items="@reservations" Hover="true" Breakpoint="Breakpoint.Sm" Class="reservation-table">
+                    <HeaderContent>
+                        <MudTh>Customer</MudTh>
+                        <MudTh>Contact</MudTh>
+                        <MudTh>Date & Time</MudTh>
+                        <MudTh>Guests</MudTh>
+                        <MudTh>Special Request</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Customer">@context.CustomerName</MudTd>
+                        <MudTd DataLabel="Contact">@context.ContactNumber</MudTd>
+                        <MudTd DataLabel="Date & Time">
+                            @context.ReservationDateTime.ToString("dd MMM yyyy hh:mm tt")
+                        </MudTd>
+                        <MudTd DataLabel="Guests">@context.NumberOfGuest</MudTd>
+                        <MudTd DataLabel="Special Request">
+                            @(!string.IsNullOrEmpty(context.SpecialRequest) ? context.SpecialRequest : "-")
+                        </MudTd>
+                        <MudTd DataLabel="Actions">
+                            <MudButtonGroup Variant="Variant.Outlined">
+                                <MudButton Class="haidilao-success-button"
+                                           Variant="Variant.Filled"
+                                           Style="background-color: var(--haidilao-success); color: white;"
+                                           @onclick="() => ConfirmReservation(context.ReservationId)">
+                                    Confirm
+                                </MudButton>
+
+                                <MudButton Class="haidilao-error-button"
+                                           Variant="Variant.Filled"
+                                           Style="background-color: var(--haidilao-red); color: white;"
+                                           OnClick="() => CancelReservation(context.ReservationId)">
+                                    Cancel
+                                </MudButton>
+                            </MudButtonGroup>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudPaper>
+
+    </MudContainer>
+</MudMainContent>
+
+@code {
+    private List<Reservation> reservations = new();
+    private int? isProcessing = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReservations();
+    }
+
+    private async Task LoadReservations()
+    {
+        Logger.LogInformation("LoadReservations started.");
+        try
+        {
+            // Get pending reservations for outlet 1
+            var response = await Http.GetFromJsonAsync<List<Reservation>>("/api/reservations");
+            Logger.LogDebug($"HTTP Response received: {response != null}");
+            reservations = response?
+                .Where(r => r.OutletId == 1 && r.Status == "Pending")
+                .OrderBy(r => r.ReservationDateTime)
+                .ToList() ?? new List<Reservation>();
+            StateHasChanged();
+            Logger.LogDebug($"Reservations count: {reservations.Count}");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading reservations");
+            Snackbar.Add($"Error loading reservations: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            Logger.LogInformation("LoadReservations finished.");
+        }
+    }
+
+    private async Task ConfirmReservation(int reservationId)
+    {
+        Logger.LogInformation($"ConfirmReservation button clicked for ID: {reservationId}");
+        await UpdateReservationStatus(reservationId, "Confirmed");
+    }
+
+    private async Task CancelReservation(int reservationId)
+    {
+        Logger.LogInformation($"CancelReservation called for ReservationId: {reservationId}");
+        await UpdateReservationStatus(reservationId, "Cancelled");
+    }
+
+    private async Task UpdateReservationStatus(int reservationId, string status)
+    {
+        Logger.LogInformation($"UpdateReservationStatus called for ReservationId: {reservationId} with Status: {status}");
+        isProcessing = reservationId;
+        StateHasChanged();
+
+        try
+        {
+            var reservationToUpdate = reservations.FirstOrDefault(r => r.ReservationId == reservationId);
+            if (reservationToUpdate == null)
+            {
+                Logger.LogWarning($"Reservation with ID {reservationId} not found.");
+                return;
+            }
+
+            // Create a new object to avoid modifying the one in the list directly before the API call
+            var updatedReservation = new Reservation
+                {
+                    ReservationId = reservationToUpdate.ReservationId,
+                    OutletId = reservationToUpdate.OutletId,
+                    CustomerName = reservationToUpdate.CustomerName,
+                    ContactNumber = reservationToUpdate.ContactNumber,
+                    NumberOfGuest = reservationToUpdate.NumberOfGuest,
+                    SpecialRequest = reservationToUpdate.SpecialRequest,
+                    ReservationDateTime = reservationToUpdate.ReservationDateTime,
+                    Status = status // Update the status
+                };
+
+            var response = await Http.PutAsJsonAsync($"/api/reservations/{reservationId}", updatedReservation);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Logger.LogInformation($"Reservation {reservationId} {status.ToLower()} successfully.");
+                Snackbar.Add($"Reservation {status.ToLower()} successfully", Severity.Success);
+                await LoadReservations();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Logger.LogError($"Error updating reservation {reservationId}: {error}");
+                Snackbar.Add($"Error: {error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, $"Error updating reservation {reservationId} to {status}");
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isProcessing = null;
+            StateHasChanged();
+        }
+    }
+
+    public class Reservation
+    {
+        public int ReservationId { get; set; }
+        public int OutletId { get; set; }
+        public string CustomerName { get; set; }
+        public string ContactNumber { get; set; }
+        public int NumberOfGuest { get; set; }
+        public string Status { get; set; }
+        public string SpecialRequest { get; set; }
+        public DateTime ReservationDateTime { get; set; }
+    }
+}

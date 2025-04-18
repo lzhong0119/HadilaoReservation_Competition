@@ -1,0 +1,326 @@
+﻿@page "/queue"
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject ILogger<Index> Logger
+@using MudBlazor
+@using System.Net.Http.Json
+
+
+<MudThemeProvider />
+
+<MudMainContent>
+    <MudContainer Class="queue-container">
+        <!-- Header Section -->
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudGrid>
+                <MudItem xs="12" md="8">
+                    <MudText Typo="Typo.h4" Color="Color.Primary">Current Queue</MudText>
+                    <MudText Typo="Typo.subtitle1" Color="Color.Secondary">Outlet #1 - Haidilao Sunway Pyramid</MudText>
+                </MudItem>
+                <MudItem xs="12" md="4" Class="d-flex align-center justify-end">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.PersonAdd"
+                               OnClick="CallNextCustomer"
+                               Disabled="@(isProcessing || !waitingQueue.Any())">
+                        Call Next Customer
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                               Class="ml-2"
+                               StartIcon="@Icons.Material.Filled.Refresh"
+                               OnClick="LoadQueue">
+                        Refresh
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+
+            <!-- Queue Summary -->
+            <MudGrid Class="mt-3">
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Class="summary-card">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">Total in Queue</MudText>
+                            <MudText Typo="Typo.h3">@totalInQueue</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Class="summary-card">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">Waiting</MudText>
+                            <MudText Typo="Typo.h3">@waitingCount</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Class="summary-card">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">Called</MudText>
+                            <MudText Typo="Typo.h3">@calledCount</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Class="summary-card">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">Est. Wait Time</MudText>
+                            <MudText Typo="Typo.h3">@(estimatedWaitTime) min</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <!-- Queue Tables -->
+        <MudPaper Class="pa-4" Elevation="1">
+            @if (queueItems == null)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+            }
+            else
+            {
+                <!-- Waiting Queue -->
+                <MudText Typo="Typo.h5" Class="mb-3">Waiting Customers (@waitingCount)</MudText>
+                <MudTable Items="@waitingQueue" Hover="true" Class="queue-table">
+                    <HeaderContent>
+                        <MudTh>Position</MudTh>
+                        <MudTh>Customer</MudTh>
+                        <MudTh>Contact</MudTh>
+                        <MudTh>Guests</MudTh>
+                        <MudTh>Waiting Time</MudTh>
+                        <MudTh>Special Request</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.QueuePosition</MudTd>
+                        <MudTd>@context.CustomerName</MudTd>
+                        <MudTd>@context.ContactNumber</MudTd>
+                        <MudTd>@context.NumberOfGuest</MudTd>
+                        <MudTd>@GetWaitingTime(context.CreatedAt)</MudTd>
+                        <MudTd>@(!string.IsNullOrEmpty(context.SpecialRequest) ? context.SpecialRequest : "-")</MudTd>
+                        <MudTd>
+                            <MudButton Variant="Variant.Text"
+                                       Color="Color.Error"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Close"
+                                       OnClick="() => RemoveFromQueue(context.QueueId)">
+                                Remove
+                            </MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+
+                <!-- Called Queue -->
+                @if (calledQueue.Any())
+                {
+                    <MudText Typo="Typo.h5" Class="mb-3 mt-6">Called Customers (@calledCount)</MudText>
+                    <MudTable Items="@calledQueue" Hover="true" Class="queue-table">
+                        <HeaderContent>
+                            <MudTh>Position</MudTh>
+                            <MudTh>Customer</MudTh>
+                            <MudTh>Contact</MudTh>
+                            <MudTh>Guests</MudTh>
+                            <MudTh>Called Time</MudTh>
+                            <MudTh>Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.QueuePosition</MudTd>
+                            <MudTd>@context.CustomerName</MudTd>
+                            <MudTd>@context.ContactNumber</MudTd>
+                            <MudTd>@context.NumberOfGuest</MudTd>
+                            <MudTd>@context.UpdatedAt?.ToString("hh:mm tt")</MudTd>
+                            <MudTd>
+                                <MudButtonGroup>
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.Check"
+                                               OnClick="() => CompleteCustomer(context.QueueId)">
+                                        Complete
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Text"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.Close"
+                                               OnClick="() => RemoveFromQueue(context.QueueId)">
+                                        Remove
+                                    </MudButton>
+                                </MudButtonGroup>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            }
+        </MudPaper>
+    </MudContainer>
+</MudMainContent>
+
+@code {
+    private List<QueueItem> queueItems = new();
+    private bool isProcessing;
+    private int totalInQueue;
+    private int waitingCount;
+    private int calledCount;
+    private int estimatedWaitTime;
+
+    private IEnumerable<QueueItem> waitingQueue =>
+        queueItems.Where(q => q.Status == "Waiting").OrderBy(q => q.QueuePosition);
+
+    private IEnumerable<QueueItem> calledQueue =>
+        queueItems.Where(q => q.Status == "Called").OrderBy(q => q.QueuePosition);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadQueue();
+    }
+
+    private async Task LoadQueue()
+    {
+        Logger.LogInformation("LoadQueue started.");
+        try
+        {
+            isProcessing = true;
+            var response = await Http.GetFromJsonAsync<List<QueueItem>>("api/queues");
+
+            queueItems = response?
+                .Where(q => q.OutletId == 1 && q.Status == "Waiting")
+                .OrderBy(q => q.QueuePosition)
+                .ToList() ?? new List<QueueItem>();
+
+            UpdateQueueStats();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading queue: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isProcessing = false;
+            Logger.LogInformation("LoadQueue finished.");
+        }
+    }
+
+    private void UpdateQueueStats()
+    {
+        waitingCount = queueItems.Count(q => q.Status == "Waiting");
+        calledCount = queueItems.Count(q => q.Status == "Called");
+        totalInQueue = waitingCount + calledCount;
+        estimatedWaitTime = waitingCount * 5; // 5 minutes per customer estimate
+    }
+
+    private string GetWaitingTime(DateTime createdAt)
+    {
+        var duration = DateTime.Now - createdAt;
+        return $"{duration.Minutes}m {duration.Seconds}s";
+    }
+
+    private async Task CallNextCustomer()
+    {
+        try
+        {
+            isProcessing = true;
+            var response = await Http.PutAsync("api/queues/call-next/1", null); // OutletId is hardcoded here
+
+            if (response.IsSuccessStatusCode)
+            {
+                var calledCustomer = await response.Content.ReadFromJsonAsync<QueueItem>();
+                if (calledCustomer != null)
+                {
+                    Snackbar.Add($"Called customer: {calledCustomer.CustomerName}", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("No customers in the waiting queue.", Severity.Info);
+                }
+                await LoadQueue();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error calling next customer: {error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error calling next customer: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private async Task CompleteCustomer(int queueId)
+    {
+        try
+        {
+            isProcessing = true;
+            var response = await Http.PutAsJsonAsync($"api/queues/{queueId}", new
+            {
+                Status = "Completed",
+                UpdatedAt = DateTime.UtcNow
+            });
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Customer marked as completed", Severity.Success);
+                await LoadQueue();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error: {error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error completing customer: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private async Task RemoveFromQueue(int queueId)
+    {
+        try
+        {
+            isProcessing = true;
+            var response = await Http.DeleteAsync($"api/queues/{queueId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Customer removed from queue", Severity.Info);
+                await LoadQueue();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error: {error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing customer: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    public class QueueItem
+    {
+        public int QueueId { get; set; }
+        public int OutletId { get; set; }
+        public string CustomerName { get; set; }
+        public string ContactNumber { get; set; }
+        public int QueuePosition { get; set; }
+        public int NumberOfGuest { get; set; }
+        public string SpecialRequest { get; set; }
+        public string Status { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+    }
+}

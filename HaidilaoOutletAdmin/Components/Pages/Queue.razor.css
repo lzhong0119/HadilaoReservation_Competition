@@ -1,0 +1,54 @@
+﻿.queue-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.summary-card {
+    background-color: var(--haidilao-cream);
+    border-radius: 8px;
+    border: 1px solid var(--haidilao-border);
+    transition: transform 0.2s ease;
+}
+
+    .summary-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+.queue-table {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+    .queue-table th {
+        background-color: var(--haidilao-light-gray) !important;
+        font-weight: 600 !important;
+        color: var(--haidilao-dark) !important;
+    }
+
+    .queue-table tr:hover {
+        background-color: rgba(227, 6, 19, 0.05) !important;
+    }
+
+.mud-button-filled-primary {
+    background-color: var(--haidilao-red) !important;
+}
+
+    .mud-button-filled-primary:hover {
+        background-color: var(--haidilao-light-red) !important;
+    }
+
+.mud-button-filled-success {
+    background-color: var(--haidilao-success) !important;
+}
+
+    .mud-button-filled-success:hover {
+        background-color: #218838 !important;
+    }
+
+.mud-button-text-error:hover {
+    color: var(--haidilao-light-red) !important;
+    background-color: rgba(227, 6, 19, 0.1) !important;
+}

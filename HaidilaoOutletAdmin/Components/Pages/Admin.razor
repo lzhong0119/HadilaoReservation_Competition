@@ -1,0 +1,1031 @@
+@page "/admin"
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@using MudBlazor
+@inject ILogger<Admin> Logger
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudMainContent>
+    <MudContainer Class="admin-container">
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudText Typo="Typo.h4" Color="Color.Primary">Outlet Reservations</MudText>
+                    <MudText Typo="Typo.subtitle1" Color="Color.Secondary">Manage reservations across all outlets</MudText>
+                </MudItem>
+                <MudItem xs="12" md="6" Class="d-flex align-center justify-end">
+                    <MudSelect T="int" Label="Select Outlet" 
+                              @bind-Value="selectedOutletId"
+                              AnchorOrigin="Origin.BottomCenter"
+                              Class="outlet-select">
+                        @foreach (var outlet in outlets)
+                        {
+                            <MudSelectItem Value="@outlet.OutletId">@outlet.OutletName</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudButton Variant="Variant.Outlined"
+                              Color="Color.Primary"
+                              StartIcon="@Icons.Material.Filled.Refresh"
+                              OnClick="() => LoadReservations()"
+                              Class="ml-2">
+                        Refresh
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudGrid>
+                <MudItem xs="12" md="4">
+                    <MudSelect T="string" Label="Filter by Status" 
+                              @bind-Value="selectedStatus"
+                              AnchorOrigin="Origin.BottomCenter">
+                        <MudSelectItem Value="@("All")">All Reservations</MudSelectItem>
+                        <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
+                        <MudSelectItem Value="@("Confirmed")">Confirmed</MudSelectItem>
+                        <MudSelectItem Value="@("Cancelled")">Cancelled</MudSelectItem>
+                        <MudSelectItem Value="@("Completed")">Completed</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudDatePicker @bind-Date="startDate" Label="Start Date" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudDatePicker @bind-Date="endDate" Label="End Date" />
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <MudPaper Class="pa-4" Elevation="1">
+            @if (reservations == null)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+            }
+            else if (!reservations.Any())
+            {
+                <MudAlert Severity="Severity.Info" Class="my-4">
+                    No reservations found for the selected criteria
+                </MudAlert>
+            }
+            else
+            {
+                <MudTable Items="@reservations" Hover="true" Breakpoint="Breakpoint.Sm" Class="reservation-table">
+                    <HeaderContent>
+                        <MudTh>Customer</MudTh>
+                        <MudTh>Contact</MudTh>
+                        <MudTh>Date & Time</MudTh>
+                        <MudTh>Guests</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Special Request</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Customer">@context.CustomerName</MudTd>
+                        <MudTd DataLabel="Contact">@context.ContactNumber</MudTd>
+                        <MudTd DataLabel="Date & Time">
+                            @context.ReservationDateTime.ToString("dd MMM yyyy hh:mm tt")
+                        </MudTd>
+                        <MudTd DataLabel="Guests">@context.NumberOfGuest</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small">
+                                @context.Status
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Special Request">
+                            @(!string.IsNullOrEmpty(context.SpecialRequest) ? context.SpecialRequest : "-")
+                        </MudTd>
+                        <MudTd DataLabel="Actions">
+                            <MudButtonGroup Variant="Variant.Outlined">
+                                @if (context.Status == "Pending")
+                                {
+                                    <MudButton Class="haidilao-success-button"
+                                               Variant="Variant.Filled"
+                                               Style="background-color: var(--haidilao-success); color: white;"
+                                               @onclick='() => UpdateReservationStatus(context.ReservationId, "Confirmed")'>
+                                        Confirm
+                                    </MudButton>
+                                }
+                                @if (context.Status != "Cancelled" && context.Status != "Completed")
+                                {
+                                    <MudButton Class="haidilao-error-button"
+                                               Variant="Variant.Filled"
+                                               Style="background-color: var(--haidilao-red); color: white;"
+                                               OnClick='() => UpdateReservationStatus(context.ReservationId, "Cancelled")'>
+                                        Cancel
+                                    </MudButton>
+                                }
+                                @if (context.Status == "Confirmed")
+                                {
+                                    <MudButton Class="haidilao-primary-button"
+                                               Variant="Variant.Filled"
+                                               Style="background-color: var(--haidilao-primary); color: white;"
+                                               OnClick='() => UpdateReservationStatus(context.ReservationId, "Completed")'>
+                                        Complete
+                                    </MudButton>
+                                }
+                            </MudButtonGroup>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudPaper>
+    </MudContainer>
+
+    <!-- Queue Management Section -->
+    <MudContainer Class="admin-container admin-section">
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudGrid>
+                <MudItem xs="12" md="8">
+                    <MudText Typo="Typo.h4" Color="Color.Primary">Queue Management</MudText>
+                    <MudText Typo="Typo.subtitle1" Color="Color.Secondary">Manage customer queues</MudText>
+                </MudItem>
+                <MudItem xs="12" md="4" Class="d-flex align-center justify-end">
+                    <MudButton Variant="Variant.Filled"
+                              Color="Color.Primary"
+                              StartIcon="@Icons.Material.Filled.PersonAdd"
+                              OnClick="CallNextCustomer"
+                              Disabled="@(isProcessing || !waitingQueue.Any())">
+                        Call Next Customer
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                              Class="ml-2"
+                              StartIcon="@Icons.Material.Filled.Refresh"
+                              OnClick="LoadQueue">
+                        Refresh
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+
+            <!-- Queue Summary -->
+            <MudGrid Class="mt-3">
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Class="summary-card">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">Total in Queue</MudText>
+                            <MudText Typo="Typo.h3">@totalInQueue</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Class="summary-card">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">Waiting</MudText>
+                            <MudText Typo="Typo.h3">@waitingCount</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Class="summary-card">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">Called</MudText>
+                            <MudText Typo="Typo.h3">@calledCount</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Class="summary-card">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">Est. Wait Time</MudText>
+                            <MudText Typo="Typo.h3">@(estimatedWaitTime) min</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <!-- Queue Tables -->
+        <MudPaper Class="pa-4" Elevation="1">
+            @if (queueItems == null)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+            }
+            else
+            {
+                <!-- Waiting Queue -->
+                <MudText Typo="Typo.h5" Class="mb-3">Waiting Customers (@waitingCount)</MudText>
+                <MudTable Items="@waitingQueue" Hover="true" Class="queue-table">
+                    <HeaderContent>
+                        <MudTh>Position</MudTh>
+                        <MudTh>Customer</MudTh>
+                        <MudTh>Contact</MudTh>
+                        <MudTh>Guests</MudTh>
+                        <MudTh>Waiting Time</MudTh>
+                        <MudTh>Special Request</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.QueuePosition</MudTd>
+                        <MudTd>@context.CustomerName</MudTd>
+                        <MudTd>@context.ContactNumber</MudTd>
+                        <MudTd>@context.NumberOfGuest</MudTd>
+                        <MudTd>@GetWaitingTime(context.CreatedAt)</MudTd>
+                        <MudTd>@(!string.IsNullOrEmpty(context.SpecialRequest) ? context.SpecialRequest : "-")</MudTd>
+                        <MudTd>
+                            <MudButton Variant="Variant.Text"
+                                      Color="Color.Error"
+                                      Size="Size.Small"
+                                      StartIcon="@Icons.Material.Filled.Close"
+                                      OnClick="() => RemoveFromQueue(context.QueueId)">
+                                Remove
+                            </MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+
+                <!-- Called Queue -->
+                @if (calledQueue.Any())
+                {
+                    <MudText Typo="Typo.h5" Class="mb-3 mt-6">Called Customers (@calledCount)</MudText>
+                    <MudTable Items="@calledQueue" Hover="true" Class="queue-table">
+                        <HeaderContent>
+                            <MudTh>Position</MudTh>
+                            <MudTh>Customer</MudTh>
+                            <MudTh>Contact</MudTh>
+                            <MudTh>Guests</MudTh>
+                            <MudTh>Called Time</MudTh>
+                            <MudTh>Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.QueuePosition</MudTd>
+                            <MudTd>@context.CustomerName</MudTd>
+                            <MudTd>@context.ContactNumber</MudTd>
+                            <MudTd>@context.NumberOfGuest</MudTd>
+                            <MudTd>@context.UpdatedAt?.ToString("hh:mm tt")</MudTd>
+                            <MudTd>
+                                <MudButtonGroup>
+                                    <MudButton Variant="Variant.Filled"
+                                              Color="Color.Success"
+                                              Size="Size.Small"
+                                              StartIcon="@Icons.Material.Filled.Check"
+                                              OnClick="() => CompleteCustomer(context.QueueId)">
+                                        Complete
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Text"
+                                              Color="Color.Error"
+                                              Size="Size.Small"
+                                              StartIcon="@Icons.Material.Filled.Close"
+                                              OnClick="() => RemoveFromQueue(context.QueueId)">
+                                        Remove
+                                    </MudButton>
+                                </MudButtonGroup>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            }
+        </MudPaper>
+    </MudContainer>
+
+    <!-- Staff Management Section -->
+    <MudContainer Class="admin-container admin-section">
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudGrid>
+                <MudItem xs="12" md="8">
+                    <MudText Typo="Typo.h4" Color="Color.Primary">Staff Management</MudText>
+                    <MudText Typo="Typo.subtitle1" Color="Color.Secondary">Manage outlet staff</MudText>
+                </MudItem>
+                <MudItem xs="12" md="4" Class="d-flex align-center justify-end">
+                    <MudButton Variant="Variant.Filled"
+                              Color="Color.Primary"
+                              StartIcon="@Icons.Material.Filled.PersonAdd"
+                              OnClick="() => showAddStaffDialog = true">
+                        Add Staff
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <!-- Staff List -->
+        <MudPaper Class="pa-4" Elevation="1">
+            @if (staffMembers == null)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+            }
+            else if (!staffMembers.Any())
+            {
+                <MudAlert Severity="Severity.Info" Class="my-4">
+                    No staff members found for this outlet
+                </MudAlert>
+            }
+            else
+            {
+                <MudTable Items="@staffMembers" Hover="true" Class="staff-table">
+                    <HeaderContent>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Contact</MudTh>
+                        <MudTh>Email</MudTh>
+                        <MudTh>Role</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Name</MudTd>
+                        <MudTd>@context.ContactNumber</MudTd>
+                        <MudTd>@context.Email</MudTd>
+                        <MudTd>
+                            <MudChip T="string" Color="@(context.Role == "Admin" ? Color.Primary : Color.Default)" Size="Size.Small">
+                                @context.Role
+                            </MudChip>
+                        </MudTd>
+                        <MudTd>
+                            <MudButtonGroup>
+                                <MudButton Variant="Variant.Text"
+                                          Color="Color.Primary"
+                                          Size="Size.Small"
+                                          StartIcon="@Icons.Material.Filled.Edit"
+                                          OnClick="() => EditStaff(context)">
+                                    Edit
+                                </MudButton>
+                                <MudButton Variant="Variant.Text"
+                                          Color="Color.Error"
+                                          Size="Size.Small"
+                                          StartIcon="@Icons.Material.Filled.Delete"
+                                          OnClick="() => DeleteStaff(context.UserId)">
+                                    Delete
+                                </MudButton>
+                            </MudButtonGroup>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudPaper>
+    </MudContainer>
+
+    <!-- Customer No-Shows Section -->
+    <MudContainer Class="admin-container admin-section">
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudGrid>
+                <MudItem xs="12" md="8">
+                    <MudText Typo="Typo.h4" Color="Color.Primary">Customer No-Shows</MudText>
+                    <MudText Typo="Typo.subtitle1" Color="Color.Secondary">Manage customer no-show records</MudText>
+                </MudItem>
+                <MudItem xs="12" md="4" Class="d-flex align-center justify-end">
+                    <MudButton Variant="Variant.Outlined"
+                              Class="ml-2"
+                              StartIcon="@Icons.Material.Filled.Refresh"
+                              OnClick="LoadNoShows">
+                        Refresh
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+
+            <!-- No-Show Summary -->
+            <MudGrid Class="mt-3">
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Class="noshow-summary-card warning">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">Warning Status</MudText>
+                            <MudText Typo="Typo.h3">@warningCount</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Class="noshow-summary-card suspended">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">Suspended</MudText>
+                            <MudText Typo="Typo.h3">@suspendedCount</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Class="noshow-summary-card banned">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">Banned</MudText>
+                            <MudText Typo="Typo.h3">@bannedCount</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Class="summary-card">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">Total No-Shows</MudText>
+                            <MudText Typo="Typo.h3">@totalNoShows</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <!-- No-Shows Table -->
+        <MudPaper Class="pa-4" Elevation="1">
+            @if (noShows == null)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+            }
+            else if (!noShows.Any())
+            {
+                <MudAlert Severity="Severity.Info" Class="my-4">
+                    No no-show records found for this outlet
+                </MudAlert>
+            }
+            else
+            {
+                <MudTable Items="@noShows" Hover="true" Class="noshow-table">
+                    <HeaderContent>
+                        <MudTh>Customer</MudTh>
+                        <MudTh>No-Show Count</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Last No-Show</MudTh>
+                        <MudTh>Expires At</MudTh>
+                        <MudTh>Reason</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.ContactNumber</MudTd>
+                        <MudTd>@context.NoShowCount</MudTd>
+                        <MudTd>
+                            <MudChip T="string" 
+                                    Color="@GetNoShowStatusColor(context.Status)"
+                                    Class="@($"status-{context.Status.ToLower()}")"
+                                    Size="Size.Small">
+                                @context.Status
+                            </MudChip>
+                        </MudTd>
+                        <MudTd>@context.LastNoShowDate.ToString("dd MMM yyyy HH:mm")</MudTd>
+                        <MudTd>@context.ExpiredAt.ToString("dd MMM yyyy HH:mm")</MudTd>
+                        <MudTd>@context.Reason</MudTd>
+                        <MudTd>
+                            <MudButtonGroup>
+                                <MudButton Variant="Variant.Text"
+                                          Color="Color.Primary"
+                                          Size="Size.Small"
+                                          StartIcon="@Icons.Material.Filled.Edit"
+                                          OnClick="() => EditNoShow(context)">
+                                    Edit
+                                </MudButton>
+                                <MudButton Variant="Variant.Text"
+                                          Color="Color.Error"
+                                          Size="Size.Small"
+                                          StartIcon="@Icons.Material.Filled.Delete"
+                                          OnClick="() => DeleteNoShow(context.NoShowId)">
+                                    Delete
+                                </MudButton>
+                            </MudButtonGroup>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudPaper>
+    </MudContainer>
+
+    <!-- Add/Edit Staff Dialog -->
+    <MudDialog @bind-IsVisible="showAddStaffDialog" MaxWidth="MaxWidth.Small" FullWidth="true">
+        <DialogContent>
+            <MudForm @ref="staffForm" Class="staff-form">
+                <MudTextField T="string" Label="Name" @bind-Value="currentStaff.Name" Required="true" />
+                <MudTextField T="string" Label="Contact Number" @bind-Value="currentStaff.ContactNumber" Required="true" />
+                <MudTextField T="string" Label="Email" @bind-Value="currentStaff.Email" Required="true" />
+                <MudTextField T="string" Label="Password" @bind-Value="currentStaff.PasswordHash" Required="true" 
+                            InputType="InputType.Password" />
+                <MudSelect T="string" Label="Role" @bind-Value="currentStaff.Role" Required="true">
+                    <MudSelectItem Value="@("Staff")">Staff</MudSelectItem>
+                    <MudSelectItem Value="@("Admin")">Admin</MudSelectItem>
+                </MudSelect>
+            </MudForm>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Color="Color.Secondary" OnClick="() => showAddStaffDialog = false">Cancel</MudButton>
+            <MudButton Color="Color.Primary" OnClick="SaveStaff">Save</MudButton>
+        </DialogActions>
+    </MudDialog>
+
+    <!-- Edit No-Show Dialog -->
+    <MudDialog @bind-IsVisible="showEditNoShowDialog" MaxWidth="MaxWidth.Small" FullWidth="true">
+        <DialogContent>
+            <MudForm @ref="noShowForm" Class="staff-form">
+                <MudTextField T="string" Label="Contact Number" @bind-Value="currentNoShow.ContactNumber" Required="true" />
+                <MudSelect T="string" Label="Status" @bind-Value="currentNoShow.Status" Required="true">
+                    <MudSelectItem Value="@("Warning")">Warning</MudSelectItem>
+                    <MudSelectItem Value="@("Suspended")">Suspended</MudSelectItem>
+                    <MudSelectItem Value="@("Banned")">Banned</MudSelectItem>
+                </MudSelect>
+                <MudTextField T="string" Label="Reason" @bind-Value="currentNoShow.Reason" Required="true" />
+            </MudForm>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Color="Color.Secondary" OnClick="() => showEditNoShowDialog = false">Cancel</MudButton>
+            <MudButton Color="Color.Primary" OnClick="SaveNoShow">Save</MudButton>
+        </DialogActions>
+    </MudDialog>
+</MudMainContent>
+
+@code {
+    private List<Reservation> reservations = new();
+    private List<Outlet> outlets = new();
+    private int selectedOutletId = 1;
+    private string selectedStatus = "All";
+    private DateTime? startDate;
+    private DateTime? endDate;
+    private bool isProcessing = false;
+
+    // Queue Management
+    private List<QueueItem> queueItems = new();
+    private int totalInQueue;
+    private int waitingCount;
+    private int calledCount;
+    private int estimatedWaitTime;
+
+    private IEnumerable<QueueItem> waitingQueue =>
+        queueItems.Where(q => q.Status == "Waiting").OrderBy(q => q.QueuePosition);
+
+    private IEnumerable<QueueItem> calledQueue =>
+        queueItems.Where(q => q.Status == "Called").OrderBy(q => q.QueuePosition);
+
+    // Staff Management
+    private List<User> staffMembers = new();
+    private bool showAddStaffDialog = false;
+    private User currentStaff = new();
+    private MudForm staffForm;
+
+    // No-Show Management
+    private List<CustomerNoShow> noShows = new();
+    private bool showEditNoShowDialog = false;
+    private CustomerNoShow currentNoShow = new();
+    private MudForm noShowForm;
+    private int warningCount;
+    private int suspendedCount;
+    private int bannedCount;
+    private int totalNoShows;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOutlets();
+        await LoadReservations();
+        await LoadQueue();
+        await LoadStaff();
+        await LoadNoShows();
+    }
+
+    private async Task LoadOutlets()
+    {
+        try
+        {
+            outlets = await Http.GetFromJsonAsync<List<Outlet>>("/api/outlets") ?? new List<Outlet>();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading outlets");
+            Snackbar.Add($"Error loading outlets: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task LoadReservations()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<Reservation>>("/api/reservations");
+            reservations = response?
+                .Where(r => r.OutletId == selectedOutletId)
+                .Where(r => selectedStatus == "All" || r.Status == selectedStatus)
+                .Where(r => !startDate.HasValue || r.ReservationDateTime.Date >= startDate.Value.Date)
+                .Where(r => !endDate.HasValue || r.ReservationDateTime.Date <= endDate.Value.Date)
+                .OrderBy(r => r.ReservationDateTime)
+                .ToList() ?? new List<Reservation>();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading reservations");
+            Snackbar.Add($"Error loading reservations: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task UpdateReservationStatus(int reservationId, string status)
+    {
+        isProcessing = true;
+        StateHasChanged();
+
+        try
+        {
+            var reservationToUpdate = reservations.FirstOrDefault(r => r.ReservationId == reservationId);
+            if (reservationToUpdate == null)
+            {
+                Logger.LogWarning($"Reservation with ID {reservationId} not found.");
+                return;
+            }
+
+            var updatedReservation = new Reservation
+            {
+                ReservationId = reservationToUpdate.ReservationId,
+                OutletId = reservationToUpdate.OutletId,
+                CustomerName = reservationToUpdate.CustomerName,
+                ContactNumber = reservationToUpdate.ContactNumber,
+                NumberOfGuest = reservationToUpdate.NumberOfGuest,
+                SpecialRequest = reservationToUpdate.SpecialRequest,
+                ReservationDateTime = reservationToUpdate.ReservationDateTime,
+                Status = status
+            };
+
+            var response = await Http.PutAsJsonAsync($"/api/reservations/{reservationId}", updatedReservation);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"Reservation {status.ToLower()} successfully", Severity.Success);
+                await LoadReservations();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Logger.LogError($"Error updating reservation {reservationId}: {error}");
+                Snackbar.Add($"Error: {error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, $"Error updating reservation {reservationId} to {status}");
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Pending" => Color.Warning,
+            "Confirmed" => Color.Info,
+            "Cancelled" => Color.Error,
+            "Completed" => Color.Success,
+            _ => Color.Default
+        };
+    }
+
+    public class Reservation
+    {
+        public int ReservationId { get; set; }
+        public int OutletId { get; set; }
+        public string CustomerName { get; set; }
+        public string ContactNumber { get; set; }
+        public int NumberOfGuest { get; set; }
+        public string Status { get; set; }
+        public string SpecialRequest { get; set; }
+        public DateTime ReservationDateTime { get; set; }
+    }
+
+    public class Outlet
+    {
+        public int OutletId { get; set; }
+        public string OutletName { get; set; }
+        public string Location { get; set; }
+        public string OperatingHours { get; set; }
+        public int Capacity { get; set; }
+    }
+
+    private async Task LoadQueue()
+    {
+        try
+        {
+            isProcessing = true;
+            var response = await Http.GetFromJsonAsync<List<QueueItem>>("api/queues");
+            queueItems = response?
+                .Where(q => q.OutletId == selectedOutletId)
+                .OrderBy(q => q.QueuePosition)
+                .ToList() ?? new List<QueueItem>();
+
+            UpdateQueueStats();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading queue");
+            Snackbar.Add($"Error loading queue: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private void UpdateQueueStats()
+    {
+        waitingCount = queueItems.Count(q => q.Status == "Waiting");
+        calledCount = queueItems.Count(q => q.Status == "Called");
+        totalInQueue = waitingCount + calledCount;
+        estimatedWaitTime = waitingCount * 5; // 5 minutes per customer estimate
+    }
+
+    private string GetWaitingTime(DateTime createdAt)
+    {
+        var duration = DateTime.Now - createdAt;
+        return $"{duration.Minutes}m {duration.Seconds}s";
+    }
+
+    private async Task CallNextCustomer()
+    {
+        try
+        {
+            isProcessing = true;
+            var response = await Http.PutAsync($"api/queues/call-next/{selectedOutletId}", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var calledCustomer = await response.Content.ReadFromJsonAsync<QueueItem>();
+                if (calledCustomer != null)
+                {
+                    Snackbar.Add($"Called customer: {calledCustomer.CustomerName}", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("No customers in the waiting queue.", Severity.Info);
+                }
+                await LoadQueue();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error calling next customer: {error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error calling next customer: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private async Task CompleteCustomer(int queueId)
+    {
+        try
+        {
+            var queueItem = queueItems.FirstOrDefault(q => q.QueueId == queueId);
+            if (queueItem != null)
+            {
+                queueItem.Status = "Completed";
+                var response = await Http.PutAsJsonAsync($"api/queues/{queueId}", queueItem);
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("Customer marked as completed", Severity.Success);
+                    await LoadQueue();
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    Snackbar.Add($"Error completing customer: {error}", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error completing customer: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveFromQueue(int queueId)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"api/queues/{queueId}");
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Customer removed from queue", Severity.Success);
+                await LoadQueue();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error removing customer: {error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing customer: {ex.Message}", Severity.Error);
+        }
+    }
+
+    public class QueueItem
+    {
+        public int QueueId { get; set; }
+        public int OutletId { get; set; }
+        public string CustomerName { get; set; }
+        public string ContactNumber { get; set; }
+        public int QueuePosition { get; set; }
+        public int NumberOfGuest { get; set; }
+        public string SpecialRequest { get; set; }
+        public string Status { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+    }
+
+    private async Task LoadStaff()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<User>>("api/users");
+            staffMembers = response?
+                .Where(u => u.OutletId == selectedOutletId)
+                .ToList() ?? new List<User>();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading staff");
+            Snackbar.Add($"Error loading staff: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void EditStaff(User staff)
+    {
+        currentStaff = new User
+        {
+            UserId = staff.UserId,
+            Name = staff.Name,
+            ContactNumber = staff.ContactNumber,
+            Email = staff.Email,
+            Role = staff.Role,
+            OutletId = staff.OutletId
+        };
+        showAddStaffDialog = true;
+    }
+
+    private async Task SaveStaff()
+    {
+        try
+        {
+            if (currentStaff.UserId == 0) // New staff
+            {
+                currentStaff.OutletId = selectedOutletId;
+                var response = await Http.PostAsJsonAsync("api/users", currentStaff);
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("Staff member added successfully", Severity.Success);
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    Snackbar.Add($"Error adding staff: {error}", Severity.Error);
+                }
+            }
+            else // Update existing staff
+            {
+                var response = await Http.PutAsJsonAsync($"api/users/{currentStaff.UserId}", currentStaff);
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("Staff member updated successfully", Severity.Success);
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    Snackbar.Add($"Error updating staff: {error}", Severity.Error);
+                }
+            }
+            showAddStaffDialog = false;
+            await LoadStaff();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving staff: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteStaff(int userId)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"api/users/{userId}");
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Staff member deleted successfully", Severity.Success);
+                await LoadStaff();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error deleting staff: {error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting staff: {ex.Message}", Severity.Error);
+        }
+    }
+
+    public class User
+    {
+        public int UserId { get; set; }
+        public string Name { get; set; }
+        public string ContactNumber { get; set; }
+        public string Email { get; set; }
+        public string PasswordHash { get; set; }
+        public string Role { get; set; }
+        public int? OutletId { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+    }
+
+    private async Task LoadNoShows()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<CustomerNoShow>>("api/customernoshows");
+            noShows = response?
+                .Where(n => n.OutletId == selectedOutletId)
+                .OrderByDescending(n => n.LastNoShowDate)
+                .ToList() ?? new List<CustomerNoShow>();
+
+            UpdateNoShowStats();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading no-shows");
+            Snackbar.Add($"Error loading no-shows: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void UpdateNoShowStats()
+    {
+        warningCount = noShows.Count(n => n.Status == "Warning");
+        suspendedCount = noShows.Count(n => n.Status == "Suspended");
+        bannedCount = noShows.Count(n => n.Status == "Banned");
+        totalNoShows = noShows.Count;
+    }
+
+    private Color GetNoShowStatusColor(string status)
+    {
+        return status switch
+        {
+            "Warning" => Color.Warning,
+            "Suspended" => Color.Error,
+            "Banned" => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    private void EditNoShow(CustomerNoShow noShow)
+    {
+        currentNoShow = new CustomerNoShow
+        {
+            NoShowId = noShow.NoShowId,
+            ContactNumber = noShow.ContactNumber,
+            Status = noShow.Status,
+            Reason = noShow.Reason,
+            OutletId = noShow.OutletId
+        };
+        showEditNoShowDialog = true;
+    }
+
+    private async Task SaveNoShow()
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"api/customernoshows/{currentNoShow.NoShowId}", currentNoShow);
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("No-show record updated successfully", Severity.Success);
+                await LoadNoShows();
+                showEditNoShowDialog = false;
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error updating no-show: {error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving no-show: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteNoShow(int noShowId)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"api/customernoshows/{noShowId}");
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("No-show record deleted successfully", Severity.Success);
+                await LoadNoShows();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error deleting no-show: {error}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting no-show: {ex.Message}", Severity.Error);
+        }
+    }
+
+    public class CustomerNoShow
+    {
+        public int NoShowId { get; set; }
+        public int OutletId { get; set; }
+        public string ContactNumber { get; set; }
+        public int NoShowCount { get; set; }
+        public string Status { get; set; }
+        public DateTime LastNoShowDate { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public DateTime ExpiredAt { get; set; }
+        public string Reason { get; set; }
+    }
+} 

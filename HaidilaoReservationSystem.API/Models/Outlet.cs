@@ -20,7 +20,7 @@ namespace HaidilaoReservationSystem.API.Models
 
         public int? Capacity { get; set; }
 
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime CreatedAt { get; set; }
 
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
@@ -29,6 +29,6 @@ namespace HaidilaoReservationSystem.API.Models
         // Navigation properties
         public ICollection<Reservation> Reservations { get; set; }
         public ICollection<Queue> Queues { get; set; }
-        public ICollection<BannedCustomer> BannedCustomers { get; set; }
+        public ICollection<CustomerNoShow> CustomerNoShows { get; set; }
     }
 }

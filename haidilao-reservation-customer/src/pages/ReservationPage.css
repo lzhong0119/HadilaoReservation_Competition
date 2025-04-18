@@ -1,0 +1,350 @@
+﻿/* Reservation Page Styles - Enhanced */
+:root {
+    --haidilao-red: #e30613;
+    --haidilao-light-red: #ff4d4d;
+    --haidilao-cream: #fff9f0;
+    --haidilao-dark: #222;
+    --haidilao-gold: #d4af37;
+    --haidilao-light-gray: #f5f5f5;
+    --haidilao-border: #e0e0e0;
+}
+
+.reservation-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    animation: fadeIn 0.6s ease-out;
+}
+
+.logo-header-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.reservationPage-logo {
+    width: 150px;
+    height: 150px;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.reservation-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    color: var(--haidilao-dark);
+}
+
+    .reservation-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem;
+        color: var(--haidilao-red);
+        position: relative;
+        display: inline-block;
+    }
+
+        .reservation-header h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 3px;
+            background: var(--haidilao-red);
+            border-radius: 3px;
+        }
+
+    .reservation-header p {
+        color: #666;
+        font-size: 1.1rem;
+        margin-top: 1rem;
+        margin-bottom: 0;
+    }
+
+.reservation-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.8rem;
+}
+
+.form-group {
+    margin-bottom: 0.2rem;
+    position: relative;
+}
+
+    .form-group.full-width {
+        grid-column: span 2;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.8rem;
+        color: var(--haidilao-dark);
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+.form-control {
+    width: 96%;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--haidilao-border);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: var(--haidilao-light-gray);
+    color: var(--haidilao-dark);
+}
+
+    .form-control:focus {
+        border-color: var(--haidilao-red);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(227, 6, 19, 0.1);
+        background-color: white;
+    }
+
+/* Enhanced Select Dropdown - Improved Version */
+select.form-control {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: none; /* Remove default arrow */
+    background-color: var(--haidilao-light-gray);
+    border: 1px solid var(--haidilao-border);
+    border-radius: 8px;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    padding-right: 2.5rem; /* Space for custom arrow */
+    font-size: 1rem;
+    color: var(--haidilao-dark);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+/* Custom dropdown arrow using pseudo-elements */
+.form-group select {
+    position: relative;
+}
+
+    .form-group select::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: 1rem;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 6px solid var(--haidilao-dark);
+        pointer-events: none;
+    }
+
+/* Focus states */
+select.form-control:focus {
+    border-color: var(--haidilao-red);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(227, 6, 19, 0.1);
+    background-color: white;
+}
+
+/* Hover state */
+select.form-control:hover {
+    border-color: #b3b3b3;
+}
+
+/* Disabled state */
+select.form-control:disabled {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+}
+
+input[name="contactNumber"].form-control {
+    width: 91%; /* Adjust this percentage to your preferred width */
+    min-width: 200px; /* Ensures it doesn't get too small on mobile */
+}
+
+/* Enhanced Date/Time Picker */
+input[type="datetime-local"].form-control {
+    padding: 0.85rem 0 0.85rem 1rem;
+    position: relative;
+    width: 96%;
+}
+
+    input[type="datetime-local"].form-control::-webkit-calendar-picker-indicator {
+        background: transparent;
+        bottom: 0;
+        color: transparent;
+        cursor: pointer;
+        height: auto;
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: auto;
+    }
+
+/* Textarea */
+textarea.form-control {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Submit Button */
+.btn-submit {
+    background-color: var(--haidilao-red);
+    background: linear-gradient(135deg, var(--haidilao-red) 0%, var(--haidilao-light-red) 100%);
+    color: white;
+    border: none;
+    padding: 1.1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    grid-column: span 2;
+    width: 100%;
+    
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(227, 6, 19, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+    .btn-submit:hover {
+        background: linear-gradient(135deg, var(--haidilao-light-red) 0%, var(--haidilao-red) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(227, 6, 19, 0.3);
+    }
+
+    .btn-submit:active {
+        transform: translateY(3px);
+        box-shadow: 0 2px 10px rgba(227, 6, 19, 0.3);
+    }
+
+    .btn-submit::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 5px;
+        height: 5px;
+        background: rgba(255, 255, 255, 0.5);
+        opacity: 0;
+        border-radius: 100%;
+        transform: scale(1, 1) translate(-50%);
+        transform-origin: 50% 50%;
+    }
+
+    .btn-submit:focus:not(:active)::after {
+        animation: ripple 0.6s ease-out;
+    }
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(20, 20);
+        opacity: 0;
+    }
+}
+
+/* Success Message */
+.success-message {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-left: 4px solid #28a745;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+    .success-message h2 {
+        color: #28a745;
+        margin-bottom: 0.5rem;
+    }
+
+    .success-message p {
+        color: #666;
+    }
+
+/* Error Messages */
+.error-message {
+    color: #dc3545;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+    .error-message::before {
+        content: '⚠';
+        margin-right: 0.3rem;
+    }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .reservation-container {
+        margin: 1rem;
+        padding: 1.5rem;
+        border-radius: 8px;
+    }
+
+    .reservation-header h1 {
+        font-size: 2rem;
+    }
+
+    .reservation-form {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .form-group.full-width {
+        grid-column: span 1;
+    }
+
+    .btn-submit {
+        grid-column: span 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .reservation-container {
+        padding: 1.2rem;
+    }
+
+    .reservation-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .form-control {
+        padding: 0.75rem;
+    }
+
+    .btn-submit {
+        padding: 1rem;
+    }
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

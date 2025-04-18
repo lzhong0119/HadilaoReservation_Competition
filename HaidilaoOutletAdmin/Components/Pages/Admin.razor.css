@@ -1,0 +1,162 @@
+.admin-container {
+    padding: 2rem 0;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.admin-section {
+    margin-bottom: 5rem;
+}
+
+.outlet-select {
+    min-width: 250px;
+}
+
+.reservation-table,
+.queue-table,
+.staff-table,
+.noshow-table {
+    margin-top: 1rem;
+}
+
+.reservation-table .mud-table-head,
+.queue-table .mud-table-head,
+.staff-table .mud-table-head,
+.noshow-table .mud-table-head {
+    background-color: var(--mud-palette-background-grey);
+}
+
+.reservation-table .mud-table-body tr:hover,
+.queue-table .mud-table-body tr:hover,
+.staff-table .mud-table-body tr:hover,
+.noshow-table .mud-table-body tr:hover {
+    background-color: var(--mud-palette-background-grey);
+    transition: background-color 0.2s ease;
+}
+
+.haidilao-success-button,
+.haidilao-error-button,
+.haidilao-primary-button {
+    min-width: 100px;
+    transition: all 0.2s ease;
+}
+
+.haidilao-success-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.haidilao-error-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.haidilao-primary-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.mud-paper {
+    border-radius: 8px;
+    transition: box-shadow 0.2s ease;
+}
+
+.mud-paper:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mud-select {
+    background-color: white;
+    border-radius: 4px;
+}
+
+.mud-date-picker {
+    background-color: white;
+    border-radius: 4px;
+}
+
+.mud-chip {
+    border-radius: 16px;
+    padding: 4px 12px;
+    font-weight: 500;
+}
+
+.summary-card {
+    height: 100%;
+    transition: transform 0.2s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+}
+
+.staff-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.staff-form .mud-text-field {
+    margin-bottom: 1rem;
+}
+
+/* No-Show Status Colors */
+.status-warning {
+    background-color: var(--mud-palette-warning);
+    color: white;
+}
+
+.status-suspended {
+    background-color: var(--mud-palette-error);
+    color: white;
+}
+
+.status-banned {
+    background-color: var(--mud-palette-error-darken);
+    color: white;
+}
+
+/* No-Show Summary Cards */
+.noshow-summary-card {
+    height: 100%;
+    transition: transform 0.2s ease;
+    border-left: 4px solid;
+}
+
+.noshow-summary-card.warning {
+    border-left-color: var(--mud-palette-warning);
+}
+
+.noshow-summary-card.suspended {
+    border-left-color: var(--mud-palette-error);
+}
+
+.noshow-summary-card.banned {
+    border-left-color: var(--mud-palette-error-darken);
+}
+
+.noshow-summary-card:hover {
+    transform: translateY(-2px);
+}
+
+@media (max-width: 600px) {
+    .admin-container {
+        padding: 1rem;
+    }
+
+    .outlet-select {
+        min-width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .reservation-table,
+    .queue-table,
+    .staff-table,
+    .noshow-table {
+        overflow-x: auto;
+    }
+
+    .summary-card,
+    .noshow-summary-card {
+        margin-bottom: 1rem;
+    }
+} 

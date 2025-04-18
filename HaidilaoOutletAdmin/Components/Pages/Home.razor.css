@@ -1,0 +1,79 @@
+﻿:root {
+    --haidilao-red: #e30613;
+    --haidilao-light-red: #ff4d4d;
+    --haidilao-cream: #fff9f0;
+    --haidilao-dark: #222;
+    --haidilao-gold: #d4af37;
+    --haidilao-light-gray: #f5f5f5;
+    --haidilao-border: #e0e0e0;
+    --haidilao-success: #28a745;
+    --haidilao-warning: #ffc107;
+}
+
+.home-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.reservation-table {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+    .reservation-table th {
+        background-color: var(--haidilao-light-gray) !important;
+        font-weight: 600 !important;
+        color: var(--haidilao-dark) !important;
+    }
+
+    .reservation-table tr:hover {
+        background-color: rgba(227, 6, 19, 0.05) !important;
+    }
+
+.mud-button-outlined-primary {
+    border-color: var(--haidilao-red) !important;
+    color: var(--haidilao-red) !important;
+}
+
+    .mud-button-outlined-primary:hover {
+        background-color: rgba(227, 6, 19, 0.1) !important;
+    }
+
+.haidilao-success-button {
+    /*background-color: var(--haidilao-success) !important;*/
+    background-color: #e30613 !important;
+    color: white !important;
+    transition: background-color 0.3s ease !important;
+}
+
+    .haidilao-success-button:hover {
+        background-color: #218838 !important;
+        transform: translateY(-1px);
+    }
+
+.haidilao-error-button {
+    background-color: var(--haidilao-red) !important;
+    color: white !important;
+    transition: background-color 0.3s ease !important;
+}
+
+    .haidilao-error-button:hover {
+        background-color: var(--haidilao-light-red) !important;
+        transform: translateY(-1px);
+    }
+
+.mud-button-group .mud-button {
+    min-width: 100px;
+    margin: 0 2px;
+}
+
+.mud-alert {
+    border-radius: 8px;
+}
+
+.mud-paper {
+    border-radius: 8px;
+    border: 1px solid var(--haidilao-border);
+}
